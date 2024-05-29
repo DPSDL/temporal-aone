@@ -1,30 +1,23 @@
-# 使用官方 Go 镜像作为构建镜像
-FROM golang:1.17 as build
+# Start from the official golang base image
+FROM golang:1.19
 
-# 设置工作目录
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# 将 go.mod 和 go.sum 复制到工作目录中
-COPY go.mod go.sum ./
+# Copy go mod and sum files
+COPY go.mod  ./
 
-# 安装依赖
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
-# 将源代码复制到工作目录中
+# Copy the source code into the container
 COPY . .
 
-# 构建应用程序
+# Build the Go app
 RUN go build -o main .
 
-# 使用一个更小的镜像作为运行时
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
+# Expose port 8080 to the outside world
+EXPOSE 8080
 
-# 设置工作目录
-WORKDIR /root/
-
-# 将编译好的二进制文件从构建阶段复制到运行时镜像
-COPY --from=build /app/main .
-
-# 设置容器启动时运行的命令
+# Command to run the executable
 CMD ["./main"]
