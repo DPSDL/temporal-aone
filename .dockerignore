@@ -1,0 +1,17 @@
+# 排除不必要的文件和目录
+vendor
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.o
+*.a
+*.log
+.dockerignore
+.docker-compose.yml
+.github/
+README.md
+static/

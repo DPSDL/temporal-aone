@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/frontend/temporal-release-ui/temporal-react-dashboard" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/temporal-react-dashboard" vcs="Git" />
   </component>
 </project>

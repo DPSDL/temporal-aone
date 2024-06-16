@@ -1,23 +1,33 @@
-# Start from the official golang base image
-FROM golang:1.19
+# 使用官方的 Golang 镜像作为基础镜像
+FROM golang:1.17-alpine AS builder
 
-# Set the Current Working Directory inside the container
+# 设置工作目录
 WORKDIR /app
 
-# Copy go mod and sum files
-COPY go.mod  ./
+# 将 go.mod 和 go.sum 复制到工作目录
+COPY go.mod ./
+COPY go.sum ./
 
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+# 下载依赖
 RUN go mod download
 
-# Copy the source code into the container
+# 复制项目中的所有内容
 COPY . .
 
-# Build the Go app
-RUN go build -o main .
+# 构建 API 可执行文件
+RUN go build -o /app/api ./backend/api/main.go
 
-# Expose port 8080 to the outside world
-EXPOSE 8080
+# 构建 Worker 可执行文件
+RUN go build -o /app/worker ./backend/cmd/worker/main.go
 
-# Command to run the executable
-CMD ["./main"]
+# 使用一个更小的运行时镜像
+FROM alpine:latest
+
+WORKDIR /root/
+
+# 从构建步骤中复制 API 和 Worker 二进制文件
+COPY --from=builder /app/api .
+COPY --from=builder /app/worker .
+
+# 默认启动命令，这里我们不指定，因为在 docker-compose.yml 中会指定具体的服务启动
+CMD ["sh"]
