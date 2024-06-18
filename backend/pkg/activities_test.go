@@ -22,7 +22,7 @@ func TestConfigRepoActivity(t *testing.T) {
 				config: Config{
 					RepoURL:        "https://github.com/DPSDL/HaoNing.git",
 					UserName:       "DPSDL",
-					Token:          "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",
+					Token:          "",
 					Tag:            "v1.0",
 					BinaryPath:     "",
 					ConfigFilePath: "",
