@@ -15,10 +15,10 @@ RUN go mod download
 COPY . .
 
 # 构建 API 可执行文件
-RUN go build -o /app/api ./backend/api/main.go
+RUN go build -o /app/api ./main.go
 
 # 构建 Worker 可执行文件
-RUN go build -o /app/worker ./backend/cmd/worker/main.go
+RUN go build -o /app/worker ./main.go
 
 # 使用一个更小的运行时镜像
 FROM alpine:latest
