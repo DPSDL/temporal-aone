@@ -1,12 +1,14 @@
-name: Docker Build and Deploy
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
+    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -28,12 +30,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/my-go-app-main:latest
-            ${{ secrets.DOCKER_USERNAME }}/my-go-app-work:latest
-          targets:
-            # 定义 Docker Compose 构建目标
-            main
-            work
+            ${{ secrets.DOCKER_USERNAME }}/my-go-api:latest
+            ${{ secrets.DOCKER_USERNAME }}/my-go-worker:latest
+          file: Dockerfile
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.1
@@ -42,5 +41,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            cd /path/to/your/project
             docker-compose pull
             docker-compose up -d
