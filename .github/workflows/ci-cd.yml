@@ -34,7 +34,6 @@ jobs:
           push: true
           tags: |
             ${{ secrets.ALIYUN_REGISTRY_URL }}/temporal-releaser/temporal-releaser:latest
-            ${{ secrets.ALIYUN_REGISTRY_URL }}/temporal-releaser/temporal-releaser:latest
           file: Dockerfile
 
       - name: Deploy to server
