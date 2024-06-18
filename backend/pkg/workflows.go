@@ -1,8 +1,9 @@
 package pkg
 
 import (
-	"go.temporal.io/sdk/workflow"
 	"time"
+
+	"go.temporal.io/sdk/workflow"
 )
 
 func generateVersion() string {

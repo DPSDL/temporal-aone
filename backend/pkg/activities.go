@@ -4,37 +4,47 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	gosundheit "github.com/AppsFlyer/go-sundheit"
-	"github.com/AppsFlyer/go-sundheit/checks"
-	"github.com/cloudflare/tableflip"
-	_ "github.com/mattn/go-sqlite3"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"io"
 	"net"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	gosundheit "github.com/AppsFlyer/go-sundheit"
+	"github.com/AppsFlyer/go-sundheit/checks"
+	"github.com/cloudflare/tableflip"
+	"github.com/go-git/go-git/v5"
+	gitHttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Config struct {
-	RepoURL        string
-	Token          string
+	RepoURL  string
+	UserName string
+	Token    string
+	Tag      string
+
 	BinaryPath     string
 	ConfigFilePath string
 	Version        string
 	LocalPath      string
-	ECSUploadPath  string
-	ECSServer      string
-	ECSUser        string
-	ECSPassword    string
+
+	ECSUploadPath string
+	ECSUser       string
+	ECSServer     string
+
+	AccessKeyID     string
+	AccessKeySecret string
+	RegionID        string
+	ECSIPAddress    string
+
 	HealthCheckURL string
 }
 
-func generateFolderName(repoURL string) string {
-	repoName := fmt.Sprintf("%s_%s", getRepoName(repoURL), time.Now().Format("20060102150405"))
-	return fmt.Sprintf("/path/to/local/%s", repoName)
+func generateFolderName(repoURL, tag string) string {
+	repoName := fmt.Sprintf("%s_%s_%s", getRepoName(repoURL), time.Now().Format("20060102150405"), tag)
+	return fmt.Sprintf("reposity/%s", repoName)
 }
 
 func getRepoName(repoURL string) string {
@@ -42,43 +52,54 @@ func getRepoName(repoURL string) string {
 	return parts[len(parts)-1]
 }
 
-func ConfigRepoActivity(ctx context.Context, config Config) (Config, error) {
-	fmt.Println("Configuring repository...")
+// validateGitRepo 验证指定的Git仓库地址是否可以连接
+func validateGitRepo(repoURL, username, token, cloneDir string) error {
+	_, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
+		URL: repoURL,
+		Auth: &gitHttp.BasicAuth{
+			Username: username, // 通常是你的用户名或令牌
+			Password: token,    // 密码或是个人访问令牌
+		},
+		Progress: os.Stdout,
+	})
+	return err
+}
 
-	localPath := generateFolderName(config.RepoURL)
-	config.LocalPath = localPath
+func ConfigRepoActivity(ctx context.Context, config Config) error {
+	localPath := generateFolderName(config.RepoURL, config.Tag)
 
-	cmd := exec.Command("git", "clone", config.RepoURL, localPath, "--depth=1")
-	cmd.Env = append(os.Environ(), fmt.Sprintf("GIT_ASKPASS=echo '%s'", config.Token))
-	var stdOut, stdErr bytes.Buffer
-	cmd.Stdout = &stdOut
-	cmd.Stderr = &stdErr
-
-	err := cmd.Run()
-	if err != nil {
-		return config, fmt.Errorf("git clone error: %v - stderr: %s", err, stdErr.String())
+	if err := validateGitRepo(config.RepoURL, config.Tag, config.Token, localPath); err != nil {
+		return err
 	}
 
-	fmt.Println("Repository cloned to:", localPath)
-	fmt.Println("Clone output:", stdOut.String())
+	// 将配置信息持久化到数据库，
 
-	// 将配置信息持久化到数据库
-	db, err := gorm.Open(sqlite.Open("config_info.db"), &gorm.Config{})
-	if err != nil {
-		return config, err
-	}
+	//db, err := gorm.Open(sqlite.Open("config_info.db"), &gorm.Config{})
+	//if err != nil {
+	//	return config, err
+	//}
 
-	err = db.AutoMigrate(&Config{})
-	if err != nil {
-		return config, fmt.Errorf("database migration error: %v", err)
-	}
+	//err = db.AutoMigrate(&Config{})
+	//if err != nil {
+	//	return config, fmt.Errorf("database migration error: %v", err)
+	//}
+	//err = shared.GetDB().Create(&config).Error
+	//if err != nil {
+	//	return config, fmt.Errorf("database insert error: %v", err)
+	//}
 
-	err = db.Create(&config).Error
-	if err != nil {
-		return config, fmt.Errorf("database insert error: %v", err)
-	}
+	return nil
+}
 
-	return config, nil
+func UploadOSSActivity(ctx context.Context, config Config) error {
+	//将指定目录可执行文件以及配置文件文件上传到oss上
+
+	return nil
+}
+
+func CheckECSActivity(ctx context.Context, config Config) error {
+
+	return nil
 }
 
 func BuildActivity(ctx context.Context, config Config) error {

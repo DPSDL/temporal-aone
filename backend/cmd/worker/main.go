@@ -1,15 +1,16 @@
 package main
 
 import (
-	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/worker"
 	"log"
 	"temporal-aone/backend/pkg"
+
+	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/worker"
 )
 
 func main() {
 	// 创建 Temporal 客户端
-	c, err := client.NewClient(client.Options{
+	c, err := client.Dial(client.Options{
 		HostPort: client.DefaultHostPort,
 	})
 	if err != nil {
@@ -20,15 +21,23 @@ func main() {
 	// 创建 Worker
 	w := worker.New(c, "release-task-queue", worker.Options{})
 
-	// 注册工作流和活动
+	// 保存配置流
 	w.RegisterWorkflow(pkg.ConfigWorkflow)
-	w.RegisterWorkflow(pkg.BuildUploadWorkflow)
-	w.RegisterWorkflow(pkg.ReleaseWorkflow)
 	w.RegisterActivity(pkg.ConfigRepoActivity)
-	w.RegisterActivity(pkg.BuildActivity)
-	w.RegisterActivity(pkg.TestActivity)
 	w.RegisterActivity(pkg.PackageActivity)
+
+	w.RegisterActivity(pkg.CheckECSActivity)
+
+	//机器上需要有个拉取oss配置的工具，定时任务一直拉取，
+
+	//上传流
+	w.RegisterWorkflow(pkg.BuildUploadWorkflow)
+	w.RegisterActivity(pkg.UploadOSSActivity)
+
+	//ecs处理流
+	w.RegisterWorkflow(pkg.ReleaseWorkflow)
 	w.RegisterActivity(pkg.UploadToECSActivity)
+
 	w.RegisterActivity(pkg.GracefulShutdownActivity)
 	w.RegisterActivity(pkg.RestartApplicationActivity)
 	w.RegisterActivity(pkg.HealthCheckActivity)
