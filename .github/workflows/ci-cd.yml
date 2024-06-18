@@ -32,8 +32,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
           platforms: linux/amd64,linux/arm64   # 支持多平台
+          tags: |
             ${{ secrets.ALIYUN_REGISTRY_URL }}/temporal-releaser/temporal-releaser:latest
           metadata: true          # 让docker/build-push-action生成元数据
           outputs: type=digest    # 输出digest信息
