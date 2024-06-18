@@ -1,5 +1,5 @@
-# 使用官方的 Golang 镜像作为基础镜像
-FROM golang:1.17-alpine AS builder
+# 使用官方的 Golang 镜像作为基础镜像，指定所需Golang版本
+FROM golang:1.21-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -14,12 +14,17 @@ RUN go mod download
 # 复制项目中的所有内容
 COPY . .
 
-# 构建 API 可执行文件，把文件输出到 /app/build 目录
-RUN mkdir -p ./build && \
-    go build -o ./build/api ./backend/api/main.go
+# 单独创建目录，以便看到具体错误
+RUN mkdir -p ./build
 
-# 构建 Worker 可执行文件，把文件输出到 /app/build 目录
-RUN go build -o ./build/worker ./backend/cmd/worker/main.go
+# 列出当前目录内容
+RUN ls -al /app
+
+# 构建 API 可执行文件，把文件输出到 /app/build 目录，并输出详细调试信息
+RUN go build -v -o ./build/api ./backend/api/main.go
+
+# 构建 Worker 可执行文件，把文件输出到 /app/build 目录，并输出详细调试信息
+RUN go build -v -o ./build/worker ./backend/cmd/worker/main.go
 
 # 使用一个更小的运行时镜像
 FROM alpine:latest
