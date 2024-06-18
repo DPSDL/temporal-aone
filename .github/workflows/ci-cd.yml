@@ -20,7 +20,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to Alibaba Cloud Registry
-        env: # 使用环境变量来引用 Secrets
+        env:
           REGISTRY_URL: ${{ secrets.ALIYUN_REGISTRY_URL }}
           REGISTRY_USERNAME: ${{ secrets.ALIYUN_USERNAME }}
           REGISTRY_PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
