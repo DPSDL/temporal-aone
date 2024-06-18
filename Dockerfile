@@ -14,20 +14,22 @@ RUN go mod download
 # 复制项目中的所有内容
 COPY . .
 
-# 构建 API 可执行文件，把文件输出到 /app/build
-RUN mkdir -p /app/build
-RUN go build -o /app/build/api ./backend/api/main.go
+# 构建 API 可执行文件，把文件输出到 /app/build 目录
+RUN mkdir -p ./build && \
+    go build -o ./build/api ./backend/api/main.go
 
-# 构建 Worker 可执行文件，把文件输出到 /app/build
-RUN go build -o /app/build/worker ./backend/cmd/worker/main.go
+# 构建 Worker 可执行文件，把文件输出到 /app/build 目录
+RUN go build -o ./build/worker ./backend/cmd/worker/main.go
 
 # 使用一个更小的运行时镜像
 FROM alpine:latest
+
+# 创建工作目录
 WORKDIR /root/
 
 # 从构建阶段中复制 API 和 Worker 二进制文件到最终镜像
 COPY --from=builder /app/build/api .
 COPY --from=builder /app/build/worker .
 
-# 默认启动命令
+# 默认启动命令，这里我们不指定，因为在 docker-compose.yml 中会指定具体的服务启动
 CMD ["sh"]
